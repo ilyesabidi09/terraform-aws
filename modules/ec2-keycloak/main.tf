@@ -52,6 +52,7 @@ resource "aws_instance" "keycloak" {
       -e KEYCLOAK_ADMIN=admin \
       -e KEYCLOAK_ADMIN_PASSWORD=admin \
       -e KC_HTTP_PORT=9090 \
+      -e KC_HTTP_ENABLED=true \
       -e KC_HOSTNAME_STRICT=false \
       -e KC_HOSTNAME_STRICT_HTTPS=false \
       -p 9090:9090 \
