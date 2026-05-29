@@ -49,11 +49,13 @@ module "ec2_db" {
 }
 
 module "ec2_keycloak" {
-  source    = "../../modules/ec2-keycloak"
-  env       = "prod"
-  vpc_id    = module.vpc.vpc_id
-  subnet_id = module.vpc.public_subnet_ids[0]
-  ami_id    = data.aws_ami.ubuntu.id
+  source      = "../../modules/ec2-keycloak"
+  env         = "prod"
+  vpc_id      = module.vpc.vpc_id
+  subnet_id   = module.vpc.public_subnet_ids[0]
+  ami_id      = data.aws_ami.ubuntu.id
+  db_host     = module.ec2_db.private_ip
+  db_password = "keycloak"
 }
 
 module "ec2_app" {

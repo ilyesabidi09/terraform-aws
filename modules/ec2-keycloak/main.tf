@@ -2,6 +2,8 @@ variable "env" {}
 variable "vpc_id" {}
 variable "subnet_id" {}
 variable "ami_id" {}
+variable "db_host" {}
+variable "db_password" { default = "keycloak" }
 
 # ─── Security Group ────────────────────────────────────────
 resource "aws_security_group" "keycloak" {
@@ -55,6 +57,10 @@ resource "aws_instance" "keycloak" {
       -e KC_HTTP_ENABLED=true \
       -e KC_HOSTNAME_STRICT=false \
       -e KC_HOSTNAME_STRICT_HTTPS=false \
+      -e KC_DB=postgres \
+      -e KC_DB_URL="jdbc:postgresql://${var.db_host}:5432/keycloak" \
+      -e KC_DB_USERNAME=keycloak \
+      -e KC_DB_PASSWORD=${var.db_password} \
       -p 9090:9090 \
       quay.io/keycloak/keycloak:24.0 start-dev
   EOF

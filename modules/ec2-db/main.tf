@@ -47,12 +47,18 @@ resource "aws_instance" "db" {
     apt-get install -y docker.io
     systemctl start docker
     systemctl enable docker
+    mkdir -p /opt/postgres-init
+    cat > /opt/postgres-init/init.sql <<'SQLEOF'
+    CREATE USER keycloak WITH PASSWORD 'keycloak';
+    CREATE DATABASE keycloak OWNER keycloak;
+    SQLEOF
     docker run -d \
       --name postgres \
       --restart always \
       -e POSTGRES_DB=demo \
       -e POSTGRES_USER=demo \
       -e POSTGRES_PASSWORD=${var.db_password} \
+      -v /opt/postgres-init:/docker-entrypoint-initdb.d \
       -p 5432:5432 \
       postgres:16
   EOF
