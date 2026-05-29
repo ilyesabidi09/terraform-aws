@@ -53,5 +53,13 @@ resource "aws_instance" "db" {
   tags = { Name = "ec2-db-${var.env}" }
 }
 
+# ─── Elastic IP (IP fixe pour la DB) ──────────────────────
+resource "aws_eip" "db" {
+  instance = aws_instance.db.id
+  domain   = "vpc"
+  tags     = { Name = "eip-db-${var.env}" }
+}
+
 output "private_ip" { value = aws_instance.db.private_ip }
+output "elastic_ip" { value = aws_eip.db.public_ip }
 output "db_url" { value = "jdbc:postgresql://${aws_instance.db.private_ip}:5432/demo" }
