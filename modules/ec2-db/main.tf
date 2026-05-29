@@ -28,10 +28,11 @@ resource "aws_security_group" "db" {
 
 # ─── EC2 with PostgreSQL ───────────────────────────────────
 resource "aws_instance" "db" {
-  ami                    = var.ami_id
-  instance_type          = "t2.micro"
-  subnet_id              = var.subnet_id
-  vpc_security_group_ids = [aws_security_group.db.id]
+  ami                         = var.ami_id
+  instance_type               = "t2.micro"
+  subnet_id                   = var.subnet_id
+  vpc_security_group_ids      = [aws_security_group.db.id]
+  associate_public_ip_address = true
 
   user_data = <<-EOF
     #!/bin/bash

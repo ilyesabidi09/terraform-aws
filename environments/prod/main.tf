@@ -43,7 +43,7 @@ module "ec2_db" {
   source      = "../../modules/ec2-db"
   env         = "prod"
   vpc_id      = module.vpc.vpc_id
-  subnet_id   = module.vpc.private_subnet_ids[0]
+  subnet_id   = module.vpc.public_subnet_ids[1]
   ami_id      = data.aws_ami.ubuntu.id
   db_password = var.db_password
 }
