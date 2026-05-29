@@ -1,7 +1,7 @@
-variable "env"       {}
-variable "vpc_id"    {}
+variable "env" {}
+variable "vpc_id" {}
 variable "subnet_id" {}
-variable "ami_id"    {}
+variable "ami_id" {}
 variable "db_password" { default = "demo1234" }
 
 # ─── Security Group ────────────────────────────────────────
@@ -53,4 +53,4 @@ resource "aws_instance" "db" {
 }
 
 output "private_ip" { value = aws_instance.db.private_ip }
-output "db_url"     { value = "jdbc:postgresql://${aws_instance.db.private_ip}:5432/demo" }
+output "db_url" { value = "jdbc:postgresql://${aws_instance.db.private_ip}:5432/demo" }

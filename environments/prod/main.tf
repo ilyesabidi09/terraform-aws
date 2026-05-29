@@ -62,5 +62,5 @@ module "ec2_app" {
   aws_region   = "eu-west-1"
 }
 
-output "app_url"      { value = module.ec2_app.app_url }
+output "app_url" { value = module.ec2_app.app_url }
 output "keycloak_url" { value = "http://${module.ec2_keycloak.public_ip}:9090" }

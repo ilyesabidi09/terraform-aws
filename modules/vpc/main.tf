@@ -11,10 +11,10 @@ resource "aws_vpc" "main" {
 
 # ─── Public Subnets ────────────────────────────────────────
 resource "aws_subnet" "public" {
-  count             = 2
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.${count.index}.0/24"
-  availability_zone = "eu-west-1${count.index == 0 ? "a" : "b"}"
+  count                   = 2
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.${count.index}.0/24"
+  availability_zone       = "eu-west-1${count.index == 0 ? "a" : "b"}"
   map_public_ip_on_launch = true
 
   tags = { Name = "subnet-public-${var.env}-${count.index}" }
@@ -55,6 +55,6 @@ resource "aws_route_table_association" "public" {
 }
 
 # ─── Outputs ───────────────────────────────────────────────
-output "vpc_id"             { value = aws_vpc.main.id }
-output "public_subnet_ids"  { value = aws_subnet.public[*].id }
+output "vpc_id" { value = aws_vpc.main.id }
+output "public_subnet_ids" { value = aws_subnet.public[*].id }
 output "private_subnet_ids" { value = aws_subnet.private[*].id }

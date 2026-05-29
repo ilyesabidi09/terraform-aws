@@ -64,7 +64,7 @@ module "ec2_app" {
   sqs_endpoint = "http://localhost:4566"
 }
 
-output "app_url"         { value = module.ec2_app.app_url }
-output "keycloak_url"    { value = "http://${module.ec2_keycloak.public_ip}:9090" }
-output "sqs_api_logs"    { value = module.sqs.api_logs_queue_url }
-output "sqs_sec_alerts"  { value = module.sqs.security_alerts_queue_url }
+output "app_url" { value = module.ec2_app.app_url }
+output "keycloak_url" { value = "http://${module.ec2_keycloak.public_ip}:9090" }
+output "sqs_api_logs" { value = module.sqs.api_logs_queue_url }
+output "sqs_sec_alerts" { value = module.sqs.security_alerts_queue_url }

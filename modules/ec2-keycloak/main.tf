@@ -1,7 +1,7 @@
-variable "env"       {}
-variable "vpc_id"    {}
+variable "env" {}
+variable "vpc_id" {}
 variable "subnet_id" {}
-variable "ami_id"    {}
+variable "ami_id" {}
 
 # ─── Security Group ────────────────────────────────────────
 resource "aws_security_group" "keycloak" {
@@ -61,8 +61,8 @@ resource "aws_instance" "keycloak" {
   tags = { Name = "ec2-keycloak-${var.env}" }
 }
 
-output "private_ip"  { value = aws_instance.keycloak.private_ip }
-output "public_ip"   { value = aws_instance.keycloak.public_ip }
+output "private_ip" { value = aws_instance.keycloak.private_ip }
+output "public_ip" { value = aws_instance.keycloak.public_ip }
 output "jwk_set_uri" {
   value = "http://${aws_instance.keycloak.public_ip}:9090/realms/ilyes-realm/protocol/openid-connect/certs"
 }

@@ -1,14 +1,14 @@
-variable "env"             {}
-variable "vpc_id"          {}
-variable "subnet_id"       {}
-variable "ami_id"          {}
-variable "docker_image"    {}
-variable "db_url"          {}
-variable "db_username"     { default = "demo" }
-variable "db_password"     { default = "demo1234" }
-variable "jwk_set_uri"     {}
-variable "aws_region"      { default = "eu-west-1" }
-variable "sqs_endpoint"    { default = "" }
+variable "env" {}
+variable "vpc_id" {}
+variable "subnet_id" {}
+variable "ami_id" {}
+variable "docker_image" {}
+variable "db_url" {}
+variable "db_username" { default = "demo" }
+variable "db_password" { default = "demo1234" }
+variable "jwk_set_uri" {}
+variable "aws_region" { default = "eu-west-1" }
+variable "sqs_endpoint" { default = "" }
 
 # ─── IAM Role for SQS access ───────────────────────────────
 resource "aws_iam_role" "app" {
@@ -103,5 +103,5 @@ resource "aws_instance" "app" {
   tags = { Name = "ec2-app-${var.env}" }
 }
 
-output "public_ip"  { value = aws_instance.app.public_ip }
-output "app_url"    { value = "http://${aws_instance.app.public_ip}:8080" }
+output "public_ip" { value = aws_instance.app.public_ip }
+output "app_url" { value = "http://${aws_instance.app.public_ip}:8080" }
