@@ -59,17 +59,19 @@ module "ec2_keycloak" {
 }
 
 module "ec2_app" {
-  source               = "../../modules/ec2-app"
-  env                  = "prod"
-  vpc_id               = module.vpc.vpc_id
-  subnet_id            = module.vpc.public_subnet_ids[0]
-  ami_id               = data.aws_ami.ubuntu.id
-  docker_image         = "ilyesabidi/spring-secure-api:latest"
-  db_url               = module.ec2_db.db_url
-  db_password          = var.db_password
-  jwk_set_uri          = module.ec2_keycloak.jwk_set_uri
-  aws_region           = "eu-west-1"
-  keycloak_instance_id = module.ec2_keycloak.instance_id
+  source                    = "../../modules/ec2-app"
+  env                       = "prod"
+  vpc_id                    = module.vpc.vpc_id
+  subnet_id                 = module.vpc.public_subnet_ids[0]
+  ami_id                    = data.aws_ami.ubuntu.id
+  docker_image              = "ilyesabidi/spring-secure-api:latest"
+  db_url                    = module.ec2_db.db_url
+  db_password               = var.db_password
+  jwk_set_uri               = module.ec2_keycloak.jwk_set_uri
+  aws_region                = "eu-west-1"
+  sqs_queue_api_logs        = module.sqs.api_logs_queue_name
+  sqs_queue_security_alerts = module.sqs.security_alerts_queue_name
+  keycloak_instance_id      = module.ec2_keycloak.instance_id
 }
 
 output "app_url" { value = module.ec2_app.app_url }

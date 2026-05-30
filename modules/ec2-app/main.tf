@@ -9,6 +9,8 @@ variable "db_password" { default = "demo1234" }
 variable "jwk_set_uri" {}
 variable "aws_region" { default = "eu-west-1" }
 variable "sqs_endpoint" { default = "" }
+variable "sqs_queue_api_logs" { default = "" }
+variable "sqs_queue_security_alerts" { default = "" }
 variable "keycloak_instance_id" { default = "" }
 
 # ─── IAM Role for SQS access ───────────────────────────────
@@ -97,6 +99,8 @@ resource "aws_instance" "app" {
       -e JWK_SET_URI="${var.jwk_set_uri}" \
       -e AWS_REGION="${var.aws_region}" \
       -e SQS_ENDPOINT="${var.sqs_endpoint}" \
+      -e SQS_QUEUE_API_LOGS="${var.sqs_queue_api_logs}" \
+      -e SQS_QUEUE_SECURITY_ALERTS="${var.sqs_queue_security_alerts}" \
       -p 8080:8080 \
       ${var.docker_image}
   EOF
