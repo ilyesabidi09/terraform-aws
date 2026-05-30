@@ -45,7 +45,7 @@ resource "aws_instance" "keycloak" {
   user_data = <<-EOF
     #!/bin/bash
     apt-get update -y
-    apt-get install -y docker.io
+    apt-get install -y docker.io curl jq
     systemctl start docker
     systemctl enable docker
     docker run -d \
@@ -63,6 +63,25 @@ resource "aws_instance" "keycloak" {
       -e KC_DB_PASSWORD=${var.db_password} \
       -p 9090:9090 \
       quay.io/keycloak/keycloak:24.0 start-dev
+
+    # Wait for Keycloak to be ready (localhost ignores SSL requirement)
+    echo "Waiting for Keycloak..."
+    until curl -s http://localhost:9090/realms/master > /dev/null 2>&1; do
+      sleep 5
+    done
+    echo "Keycloak is up. Disabling SSL requirement on master realm..."
+
+    TOKEN=$(curl -s -X POST http://localhost:9090/realms/master/protocol/openid-connect/token \
+      -d "client_id=admin-cli&username=admin&password=admin&grant_type=password" \
+      | jq -r '.access_token')
+
+    # Disable SSL requirement on master realm so external HTTP access works
+    curl -s -X PUT http://localhost:9090/admin/realms/master \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"sslRequired":"NONE"}'
+
+    echo "SSL requirement disabled."
   EOF
 
   tags = { Name = "ec2-keycloak-${var.env}" }
