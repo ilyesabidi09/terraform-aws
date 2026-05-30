@@ -9,6 +9,7 @@ variable "db_password" { default = "demo1234" }
 variable "jwk_set_uri" {}
 variable "aws_region" { default = "eu-west-1" }
 variable "sqs_endpoint" { default = "" }
+variable "keycloak_instance_id" { default = "" }
 
 # ─── IAM Role for SQS access ───────────────────────────────
 resource "aws_iam_role" "app" {
@@ -101,6 +102,15 @@ resource "aws_instance" "app" {
   EOF
 
   tags = { Name = "ec2-app-${var.env}" }
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.keycloak_instance_id]
+  }
+}
+
+# Sentinel resource — change quand keycloak_instance_id change → force recréation de l'app
+resource "terraform_data" "keycloak_instance_id" {
+  input = var.keycloak_instance_id
 }
 
 output "public_ip" { value = aws_instance.app.public_ip }

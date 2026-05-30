@@ -162,8 +162,9 @@ resource "aws_instance" "keycloak" {
   tags = { Name = "ec2-keycloak-${var.env}" }
 }
 
-output "private_ip" { value = aws_instance.keycloak.private_ip }
-output "public_ip" { value = aws_instance.keycloak.public_ip }
+output "instance_id" { value = aws_instance.keycloak.id }
+output "private_ip"  { value = aws_instance.keycloak.private_ip }
+output "public_ip"   { value = aws_instance.keycloak.public_ip }
 output "jwk_set_uri" {
   value = "http://${aws_instance.keycloak.public_ip}:9090/realms/ilyes-realm/protocol/openid-connect/certs"
 }
