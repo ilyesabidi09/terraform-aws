@@ -64,24 +64,25 @@ resource "aws_instance" "keycloak" {
       -p 9090:9090 \
       quay.io/keycloak/keycloak:24.0 start-dev
 
-    # Wait for Keycloak to be ready (localhost ignores SSL requirement)
-    echo "Waiting for Keycloak..."
-    until curl -s http://localhost:9090/realms/master > /dev/null 2>&1; do
+    # Wait for Keycloak to be ready inside container
+    echo "Waiting for Keycloak to start..."
+    until docker exec keycloak curl -sf http://localhost:9090/realms/master > /dev/null 2>&1; do
       sleep 5
     done
-    echo "Keycloak is up. Disabling SSL requirement on master realm..."
+    echo "Keycloak is up. Disabling SSL requirement via kcadm..."
 
-    TOKEN=$(curl -s -X POST http://localhost:9090/realms/master/protocol/openid-connect/token \
-      -d "client_id=admin-cli&username=admin&password=admin&grant_type=password" \
-      | jq -r '.access_token')
+    # Authenticate with kcadm.sh (runs inside container, uses localhost = no SSL check)
+    docker exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
+      --server http://localhost:9090 \
+      --realm master \
+      --user admin \
+      --password admin
 
-    # Disable SSL requirement on master realm so external HTTP access works
-    curl -s -X PUT http://localhost:9090/admin/realms/master \
-      -H "Authorization: Bearer $TOKEN" \
-      -H "Content-Type: application/json" \
-      -d '{"sslRequired":"NONE"}'
+    # Disable ssl_required on master realm
+    docker exec keycloak /opt/keycloak/bin/kcadm.sh update realms/master \
+      -s sslRequired=NONE
 
-    echo "SSL requirement disabled."
+    echo "Done. SSL requirement disabled on master realm."
   EOF
 
   tags = { Name = "ec2-keycloak-${var.env}" }
