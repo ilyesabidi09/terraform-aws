@@ -64,21 +64,21 @@ resource "aws_instance" "keycloak" {
       -p 9090:9090 \
       quay.io/keycloak/keycloak:24.0 start-dev
 
-    # Wait for Keycloak to be ready inside container
+    # Wait for Keycloak using HOST curl (curl is on the host, not inside the container)
     echo "Waiting for Keycloak to start..."
-    until docker exec keycloak curl -sf http://localhost:9090/realms/master > /dev/null 2>&1; do
+    until curl -sf http://localhost:9090/realms/master > /dev/null 2>&1; do
       sleep 5
     done
+    sleep 10
     echo "Keycloak is up. Disabling SSL requirement via kcadm..."
 
-    # Authenticate with kcadm.sh (runs inside container, uses localhost = no SSL check)
+    # kcadm.sh runs inside container and connects to container localhost (bypasses ssl_required=EXTERNAL)
     docker exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
       --server http://localhost:9090 \
       --realm master \
       --user admin \
       --password admin
 
-    # Disable ssl_required on master realm
     docker exec keycloak /opt/keycloak/bin/kcadm.sh update realms/master \
       -s sslRequired=NONE
 
