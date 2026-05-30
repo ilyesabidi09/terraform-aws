@@ -45,7 +45,7 @@ resource "aws_instance" "keycloak" {
   user_data = <<-EOF
     #!/bin/bash
     apt-get update -y
-    apt-get install -y docker.io curl postgresql-client
+    apt-get install -y docker.io curl
     systemctl start docker
     systemctl enable docker
     docker run -d \
@@ -64,22 +64,29 @@ resource "aws_instance" "keycloak" {
       -p 9090:9090 \
       quay.io/keycloak/keycloak:24.0 start-dev
 
-    # Wait for Keycloak to initialize and write master realm to DB
-    echo "Waiting for Keycloak to start..."
+    # Wait for Keycloak (localhost bypasses ssl_required=EXTERNAL)
+    echo "Waiting for Keycloak..."
     until curl -sf http://localhost:9090/realms/master > /dev/null 2>&1; do
       sleep 5
     done
     sleep 15
-    echo "Keycloak is up. Patching ssl_required directly in PostgreSQL..."
+    echo "Keycloak ready. Getting admin token via localhost..."
 
-    # Patch ssl_required=NONE directly in DB — simpler and more reliable than kcadm.sh
-    PGPASSWORD=${var.db_password} psql \
-      -h ${var.db_host} -U keycloak -d keycloak \
-      -c "UPDATE realm SET ssl_required = 'NONE' WHERE id = 'master';"
+    # Get admin token — python3 is always available on Ubuntu, no jq needed
+    TOKEN=$(curl -s -X POST http://localhost:9090/realms/master/protocol/openid-connect/token \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "client_id=admin-cli&username=admin&password=admin&grant_type=password" \
+      | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token','ERROR'))")
 
-    # Restart Keycloak so it picks up the updated realm config from DB
-    docker restart keycloak
-    echo "Done. Keycloak restarted with ssl_required=NONE."
+    echo "Token: $${TOKEN:0:20}..."
+
+    # Disable ssl_required on master realm via Admin REST API
+    curl -s -X PUT http://localhost:9090/admin/realms/master \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"sslRequired":"NONE"}'
+
+    echo "Done. ssl_required set to NONE."
   EOF
 
   tags = { Name = "ec2-keycloak-${var.env}" }
