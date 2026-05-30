@@ -72,5 +72,6 @@ module "ec2_app" {
   keycloak_instance_id = module.ec2_keycloak.instance_id
 }
 
-output "app_url" { value = module.ec2_app.app_url }
+output "app_url"      { value = module.ec2_app.app_url }
 output "keycloak_url" { value = "http://${module.ec2_keycloak.public_ip}:9090" }
+output "pgadmin_url"  { value = "http://${module.ec2_db.elastic_ip}:5050" }

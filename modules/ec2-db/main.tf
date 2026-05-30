@@ -23,6 +23,13 @@ resource "aws_security_group" "db" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = 5050
+    to_port     = 5050
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -59,8 +66,17 @@ resource "aws_instance" "db" {
       -e POSTGRES_USER=demo \
       -e POSTGRES_PASSWORD=${var.db_password} \
       -v /opt/postgres-init:/docker-entrypoint-initdb.d \
+      -v pgdata:/var/lib/postgresql/data \
       -p 5432:5432 \
       postgres:16
+
+    docker run -d \
+      --name pgadmin \
+      --restart always \
+      -e PGADMIN_DEFAULT_EMAIL=admin@admin.com \
+      -e PGADMIN_DEFAULT_PASSWORD=admin \
+      -p 5050:80 \
+      dpage/pgadmin4:latest
   EOF
 
   tags = { Name = "ec2-db-${var.env}" }
