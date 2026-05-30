@@ -55,10 +55,8 @@ resource "aws_instance" "db" {
     systemctl start docker
     systemctl enable docker
     mkdir -p /opt/postgres-init
-    cat > /opt/postgres-init/init.sql <<'SQLEOF'
-    CREATE USER keycloak WITH PASSWORD 'keycloak';
-    CREATE DATABASE keycloak OWNER keycloak;
-    SQLEOF
+    printf 'CREATE USER keycloak WITH PASSWORD '"'"'keycloak'"'"';\nCREATE DATABASE keycloak OWNER keycloak;\n' > /opt/postgres-init/init.sql
+    echo "[DB] Starting PostgreSQL..."
     docker run -d \
       --name postgres \
       --restart always \
@@ -69,7 +67,9 @@ resource "aws_instance" "db" {
       -v pgdata:/var/lib/postgresql/data \
       -p 5432:5432 \
       postgres:16
+    echo "[DB] PostgreSQL started."
 
+    echo "[DB] Starting pgAdmin..."
     docker run -d \
       --name pgadmin \
       --restart always \
@@ -77,6 +77,7 @@ resource "aws_instance" "db" {
       -e PGADMIN_DEFAULT_PASSWORD=admin \
       -p 5050:80 \
       dpage/pgadmin4:latest
+    echo "[DB] pgAdmin started."
   EOF
 
   tags = { Name = "ec2-db-${var.env}" }
