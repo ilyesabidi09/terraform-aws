@@ -45,7 +45,7 @@ resource "aws_instance" "keycloak" {
   user_data = <<-EOF
     #!/bin/bash
     apt-get update -y
-    apt-get install -y docker.io curl jq
+    apt-get install -y docker.io curl postgresql-client
     systemctl start docker
     systemctl enable docker
     docker run -d \
@@ -64,25 +64,22 @@ resource "aws_instance" "keycloak" {
       -p 9090:9090 \
       quay.io/keycloak/keycloak:24.0 start-dev
 
-    # Wait for Keycloak using HOST curl (curl is on the host, not inside the container)
+    # Wait for Keycloak to initialize and write master realm to DB
     echo "Waiting for Keycloak to start..."
     until curl -sf http://localhost:9090/realms/master > /dev/null 2>&1; do
       sleep 5
     done
-    sleep 10
-    echo "Keycloak is up. Disabling SSL requirement via kcadm..."
+    sleep 15
+    echo "Keycloak is up. Patching ssl_required directly in PostgreSQL..."
 
-    # kcadm.sh runs inside container and connects to container localhost (bypasses ssl_required=EXTERNAL)
-    docker exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
-      --server http://localhost:9090 \
-      --realm master \
-      --user admin \
-      --password admin
+    # Patch ssl_required=NONE directly in DB — simpler and more reliable than kcadm.sh
+    PGPASSWORD=${var.db_password} psql \
+      -h ${var.db_host} -U keycloak -d keycloak \
+      -c "UPDATE realm SET ssl_required = 'NONE' WHERE id = 'master';"
 
-    docker exec keycloak /opt/keycloak/bin/kcadm.sh update realms/master \
-      -s sslRequired=NONE
-
-    echo "Done. SSL requirement disabled on master realm."
+    # Restart Keycloak so it picks up the updated realm config from DB
+    docker restart keycloak
+    echo "Done. Keycloak restarted with ssl_required=NONE."
   EOF
 
   tags = { Name = "ec2-keycloak-${var.env}" }
