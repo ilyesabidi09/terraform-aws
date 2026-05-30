@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
+    inputs:
+      destroy_first:
+        description: "Destroy all resources before applying? (full reset)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 permissions:
   id-token: write   # required for OIDC
@@ -13,10 +22,43 @@ permissions:
 
 jobs:
 
+  # ─── Destroy (optionnel, uniquement via workflow_dispatch) ───
+  destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+    if: github.event.inputs.destroy_first == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.5
+
+      - name: Terraform Init
+        working-directory: environments/prod
+        run: terraform init
+
+      - name: Terraform Destroy
+        working-directory: environments/prod
+        env:
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+        run: terraform destroy -auto-approve
+
   # ─── Plan (on every push/PR) ──────────────────────────────
   plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
+    needs: [destroy]
+    if: always() && !failure()
 
     steps:
       - name: Checkout
